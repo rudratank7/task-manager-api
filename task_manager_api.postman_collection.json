@@ -1,0 +1,770 @@
+{
+	"info": {
+		"_postman_id": "8c0a87a2-f8c6-4d7a-8b89-4e50d60c4cf1",
+		"name": "Task Manager API",
+		"description": "Production-ready Task Management API containing endpoints for Auth (registration, login, refresh token rotation), Projects (CRUD with pagination and status aggregations), Tasks (CRUD, GIN full-text search, and atomic bulk operations), and Comments.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Auth",
+			"item": [
+				{
+					"name": "Register Organization & Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orgName\": \"Stark Industries\",\n    \"email\": \"tony@stark.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Registers a new organization along with its first administrator user."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.accessToken) {",
+									"    pm.collectionVariables.set(\"accessToken\", response.accessToken);",
+									"}",
+									"if (response.refreshToken) {",
+									"    pm.collectionVariables.set(\"refreshToken\", response.refreshToken);",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"tony+c50d32@stark.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Authenticates a user and returns access and refresh tokens. Automatically sets the collection variables for tokens upon success."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token Rotation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.accessToken) {",
+									"    pm.collectionVariables.set(\"accessToken\", response.accessToken);",
+									"}",
+									"if (response.refreshToken) {",
+									"    pm.collectionVariables.set(\"refreshToken\", response.refreshToken);",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/refresh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Performs refresh token rotation. Revokes the old refresh token and issues a new access token + refresh token pair."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Projects",
+			"item": [
+				{
+					"name": "List Projects (Paginated)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/projects?page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"projects"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Lists all non-deleted projects belonging to the user's organization."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Project (with status counts)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{projectId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"projects",
+								"{{projectId}}"
+							]
+						},
+						"description": "Returns details of a project along with task aggregations grouped by status (todo, in_progress, done, archived)."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Project (Admin Only)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.id) {",
+									"    pm.collectionVariables.set(\"projectId\", response.id);",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Arc Reactor V2\",\n    \"description\": \"Optimization of clean energy core output\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"projects"
+							]
+						},
+						"description": "Creates a new project. Automatically saves the returned project UUID as a collection variable."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Project (Admin Only)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Arc Reactor V2.5\",\n    \"description\": \"Now with Palladium-free elements\",\n    \"version\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{projectId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"projects",
+								"{{projectId}}"
+							]
+						},
+						"description": "Updates a project. Enforces optimistic concurrency control; the `version` field must match the current database state."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Project (Admin Only)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/projects/{{projectId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"projects",
+								"{{projectId}}"
+							]
+						},
+						"description": "Soft-deletes a project."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Tasks",
+			"item": [
+				{
+					"name": "List Tasks (Filters & Search)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/tasks?status=todo&priority=high&search=reactor&sortBy=dueDate&order=asc&page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tasks"
+							],
+							"query": [
+								{
+									"key": "projectId",
+									"value": "{{projectId}}",
+									"disabled": true
+								},
+								{
+									"key": "status",
+									"value": "todo"
+								},
+								{
+									"key": "priority",
+									"value": "high"
+								},
+								{
+									"key": "assigneeId",
+									"value": "",
+									"disabled": true
+								},
+								{
+									"key": "dueDateFrom",
+									"value": "2026-01-01",
+									"disabled": true
+								},
+								{
+									"key": "dueDateTo",
+									"value": "2026-12-31",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "reactor"
+								},
+								{
+									"key": "sortBy",
+									"value": "dueDate"
+								},
+								{
+									"key": "order",
+									"value": "asc"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Retrieves task details with full-text search capabilities using GIN indexes and dynamic column order weights."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Task (with comments & history)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/tasks/{{taskId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tasks",
+								"{{taskId}}"
+							]
+						},
+						"description": "Gets task details along with its 10 most recent comments and 10 most recent activity logs."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Task (Atomic Log)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.id) {",
+									"    pm.collectionVariables.set(\"taskId\", response.id);",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"projectId\": \"{{projectId}}\",\n    \"title\": \"Upgrade magnetic containment core\",\n    \"description\": \"Calibrate shielding vectors to prevent high temperature thermal spikes.\",\n    \"status\": \"todo\",\n    \"priority\": \"high\",\n    \"dueDate\": \"2026-08-30T12:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tasks",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tasks"
+							]
+						},
+						"description": "Creates a new task. The creation of the task and its initial activity log record occur in a single atomic transaction. Automatically saves the task UUID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Task (Atomic Change Diff)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"in_progress\",\n    \"priority\": \"urgent\",\n    \"version\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tasks/{{taskId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tasks",
+								"{{taskId}}"
+							]
+						},
+						"description": "Updates a task. Detects field alterations, applies changes, checks optimistic concurrency, and writes a detailed diff record in the activity log."
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Update (Transaction-safe)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ids\": [\n        \"{{taskId}}\"\n    ],\n    \"status\": \"done\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/tasks/bulk",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tasks",
+								"bulk"
+							]
+						},
+						"description": "Performs an atomic bulk update on tasks. If any task is invalid or belongs to another organization, the database transaction is completely aborted."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Task (Soft Delete)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/tasks/{{taskId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"tasks",
+								"{{taskId}}"
+							]
+						},
+						"description": "Soft-deletes a task."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Comments",
+			"item": [
+				{
+					"name": "List Comments",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/comments?taskId={{taskId}}&page=1&limit=20",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments"
+							],
+							"query": [
+								{
+									"key": "taskId",
+									"value": "{{taskId}}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Retrieves paginated comments for a specific task."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Comment (Atomic Log)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"if (response.id) {",
+									"    pm.collectionVariables.set(\"commentId\", response.id);",
+									"}"
+								],
+								"type": "javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"taskId\": \"{{taskId}}\",\n    \"body\": \"Containment field stability matches baseline metrics.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/comments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments"
+							]
+						},
+						"description": "Creates a comment and logs it as task activity in a transaction."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Comment (Author or Admin Only)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/comments/{{commentId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"comments",
+								"{{commentId}}"
+							]
+						},
+						"description": "Soft-deletes a comment. Only the author or an admin of the organization is permitted to call this endpoint."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refreshToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "projectId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "taskId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "commentId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
