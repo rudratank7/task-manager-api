@@ -3,11 +3,10 @@ import { env } from './config/env.js';
 import { swaggerConfig } from './config/swagger.js';
 import { authMiddleware } from './middleware/auth.js';
 import { errorHandler } from './middleware/errorHandler.js';
-
-import { authRoutes } from './routes/auth.routes.js';
-import { projectRoutes } from './routes/project.routes.js';
-import { taskRoutes } from './routes/task.routes.js';
-import { commentRoutes } from './routes/comment.routes.js';
+import { authRoutes } from './routes/public/auth.routes.js';
+import { projectRoutes } from './routes/private/project.routes.js';
+import { taskRoutes } from './routes/private/task.routes.js';
+import { commentRoutes } from './routes/private/comment.routes.js';
 
 export const app = Fastify({
   logger: {
@@ -21,20 +20,16 @@ app.register(swaggerConfig);
 app.register(authMiddleware);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.register(authRoutes,    { prefix: '/auth' });
-app.register(projectRoutes, { prefix: '/projects' });
-app.register(taskRoutes,    { prefix: '/tasks' });
-app.register(commentRoutes, { prefix: '/comments' });
+app.register(authRoutes, { prefix: '/auth' });
 
-// ── Health Check ─────────────────────────────────────────────────────────────
+app.register(async (privateInstance) => {
+  privateInstance.addHook('preHandler', privateInstance.authenticate);
+  privateInstance.register(projectRoutes, { prefix: '/projects' });
+  privateInstance.register(taskRoutes,    { prefix: '/tasks' });
+  privateInstance.register(commentRoutes, { prefix: '/comments' });
+});
+
+// ── Root → Docs redirect ───────────────────────────────────────────────────────
+app.get('/', async (_request, reply) => reply.redirect('/docs'));
+app.get('/favicon.ico', async (_request, reply) => reply.status(204).send());
 app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
-
-// ── Root Route → redirect to API docs ────────────────────────────────────────
-app.get('/', async (_request, reply) => {
-  return reply.redirect('/docs');
-});
-
-// ── Silence favicon 404 in browser ───────────────────────────────────────────
-app.get('/favicon.ico', async (_request, reply) => {
-  return reply.status(204).send();
-});

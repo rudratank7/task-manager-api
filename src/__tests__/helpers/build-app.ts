@@ -18,10 +18,10 @@ import Fastify from 'fastify';
 import { AppError } from '../../utils/errors.js';
 import { swaggerConfig } from '../../config/swagger.js';
 import { authMiddleware } from '../../middleware/auth.js';
-import { authRoutes } from '../../routes/auth.routes.js';
-import { projectRoutes } from '../../routes/project.routes.js';
-import { taskRoutes } from '../../routes/task.routes.js';
-import { commentRoutes } from '../../routes/comment.routes.js';
+import { authRoutes } from '../../routes/public/auth.routes.js';
+import { projectRoutes } from '../../routes/private/project.routes.js';
+import { taskRoutes } from '../../routes/private/task.routes.js';
+import { commentRoutes } from '../../routes/private/comment.routes.js';
 
 export async function buildTestApp() {
   const app = Fastify({ logger: false });
@@ -40,10 +40,14 @@ export async function buildTestApp() {
 
   await app.register(swaggerConfig);
   await app.register(authMiddleware);
-  await app.register(authRoutes,     { prefix: '/auth' });
-  await app.register(projectRoutes,  { prefix: '/projects' });
-  await app.register(taskRoutes,     { prefix: '/tasks' });
-  await app.register(commentRoutes,  { prefix: '/comments' });
+  
+  await app.register(authRoutes, { prefix: '/auth' });
+  await app.register(async (privateInstance) => {
+    privateInstance.addHook('preHandler', privateInstance.authenticate);
+    privateInstance.register(projectRoutes, { prefix: '/projects' });
+    privateInstance.register(taskRoutes,    { prefix: '/tasks' });
+    privateInstance.register(commentRoutes, { prefix: '/comments' });
+  });
 
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 

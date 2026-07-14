@@ -1,9 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import * as commentController from '../controllers/comment.controller.js';
+import * as commentController from '../../controllers/comment.controller.js';
 
 export async function commentRoutes(fastify: FastifyInstance) {
-  fastify.addHook('preHandler', fastify.authenticate);
-
   fastify.get('/', {
     schema: { tags: ['Comments'], summary: 'List comments for a task (paginated, ?taskId=uuid required)', security: [{ bearerAuth: [] }] },
   }, commentController.listComments);

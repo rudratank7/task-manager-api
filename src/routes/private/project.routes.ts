@@ -1,9 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import * as projectController from '../controllers/project.controller.js';
+import * as projectController from '../../controllers/project.controller.js';
 
 export async function projectRoutes(fastify: FastifyInstance) {
-  fastify.addHook('preHandler', fastify.authenticate);
-
   fastify.get('/', {
     schema: { tags: ['Projects'], summary: 'List projects (paginated)', security: [{ bearerAuth: [] }] },
   }, projectController.listProjects);

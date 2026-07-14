@@ -1,9 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import * as taskController from '../controllers/task.controller.js';
+import * as taskController from '../../controllers/task.controller.js';
 
 export async function taskRoutes(fastify: FastifyInstance) {
-  fastify.addHook('preHandler', fastify.authenticate);
-
   fastify.patch('/bulk', {
     schema: { tags: ['Tasks'], summary: 'Bulk update status/assignee (all-or-nothing transaction)', security: [{ bearerAuth: [] }] },
   }, taskController.bulkUpdateTasks);
