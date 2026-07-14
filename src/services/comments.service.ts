@@ -7,10 +7,10 @@
  *   deleteComment — soft delete, author or admin only
  */
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
-import { db } from '../../db/index.js';
-import { activityLog, comments, tasks } from '../../db/schema/index.js';
-import { AppError } from '../../lib/errors.js';
-import type { CreateCommentInput } from './comments.schema.js';
+import { db } from '../db/index.js';
+import { activityLog, comments, tasks } from '../models/index.js';
+import { AppError } from '../utils/errors.js';
+import type { CreateCommentInput } from '../schemas/comments.schema.js';
 
 // ─── List Comments (paginated) ────────────────────────────────────────────────
 export async function listComments(taskId: string, page: number, limit: number) {

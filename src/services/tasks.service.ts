@@ -17,15 +17,15 @@
  *   On success it issues COMMIT — everything is persisted atomically.
  */
 import { SQL, and, asc, desc, eq, gte, inArray, isNull, lte, sql } from 'drizzle-orm';
-import { db } from '../../db/index.js';
-import { activityLog, comments, projects, tasks } from '../../db/schema/index.js';
-import { AppError } from '../../lib/errors.js';
+import { db } from '../db/index.js';
+import { activityLog, comments, projects, tasks } from '../models/index.js';
+import { AppError } from '../utils/errors.js';
 import type {
   BulkUpdateTaskInput,
   CreateTaskInput,
   ListTasksInput,
   UpdateTaskInput,
-} from './tasks.schema.js';
+} from '../schemas/tasks.schema.js';
 
 // ─── List Tasks ───────────────────────────────────────────────────────────────
 /**

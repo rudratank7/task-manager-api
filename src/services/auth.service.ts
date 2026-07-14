@@ -18,9 +18,9 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { eq } from 'drizzle-orm';
-import { db } from '../../db/index.js';
-import { organizations, users, refreshTokens } from '../../db/schema/index.js';
-import type { RegisterInput, LoginInput } from './auth.schema.js';
+import { db } from '../db/index.js';
+import { organizations, users, refreshTokens } from '../models/index.js';
+import type { RegisterInput, LoginInput } from '../schemas/auth.schema.js';
 
 // ─── Custom Error Codes ───────────────────────────────────────────────────────
 // We throw plain Error objects with a `code` property so routes can handle

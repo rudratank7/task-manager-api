@@ -12,22 +12,22 @@
  * RUN: npm test
  */
 import { describe, it, expect } from 'vitest';
-import { registerSchema, loginSchema } from '../modules/auth/auth.schema.js';
+import { registerSchema, loginSchema } from '../schemas/auth.schema.js';
 import {
   createProjectSchema,
   updateProjectSchema,
   listProjectsSchema,
-} from '../modules/projects/projects.schema.js';
+} from '../schemas/projects.schema.js';
 import {
   createTaskSchema,
   updateTaskSchema,
   bulkUpdateTaskSchema,
   listTasksSchema,
-} from '../modules/tasks/tasks.schema.js';
+} from '../schemas/tasks.schema.js';
 import {
   createCommentSchema,
   listCommentsSchema,
-} from '../modules/comments/comments.schema.js';
+} from '../schemas/comments.schema.js';
 
 // ─────────────────────────────── AUTH SCHEMAS ─────────────────────────────────
 

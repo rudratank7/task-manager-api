@@ -1,28 +1,16 @@
-/**
- * SWAGGER / OPENAPI PLUGIN  (src/plugins/swagger.ts)
- *
- * WHY SWAGGER?
- * Swagger (OpenAPI 3.0) gives you an interactive UI at /docs where you can
- * read every endpoint, see its inputs/outputs, and test it directly in the browser
- * — no Postman needed.
- *
- * HOW IT WORKS WITH FASTIFY + ZOD:
- * We DISABLE Fastify's built-in JSON-schema validation (setValidatorCompiler)
- * because Zod already handles all validation in our route handlers.
- * The `schema` objects on routes are used ONLY for generating the Swagger docs —
- * they never actually validate anything at runtime.
- *
- * FLOW:
- *   request → Fastify router → route handler → Zod validates → service → response
- *                          ↑
- *                  (schema used for docs only, NOT validation)
- */
 import fp from 'fastify-plugin';
 import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import type { FastifyInstance } from 'fastify';
 
-export const swaggerPlugin = fp(async (fastify: FastifyInstance) => {
+/**
+ * SWAGGER CONFIG  (src/config/swagger.ts)
+ *
+ * Registers the OpenAPI 3.0 documentation at /docs.
+ * Disables Fastify's built-in JSON-schema validation because
+ * Zod already handles all validation in controllers.
+ */
+export const swaggerConfig = fp(async (fastify: FastifyInstance) => {
   // Disable Fastify's built-in schema validator — Zod handles all validation
   fastify.setValidatorCompiler(() => () => true);
 
@@ -46,7 +34,6 @@ RESTful task management API.
       ],
       components: {
         securitySchemes: {
-          // Every protected route declares: security: [{ bearerAuth: [] }]
           bearerAuth: {
             type:         'http',
             scheme:       'bearer',
@@ -70,7 +57,7 @@ RESTful task management API.
     uiConfig: {
       docExpansion: 'list',
       deepLinking:  true,
-      filter:       true,     // search bar in the UI
+      filter:       true,
     },
     staticCSP: true,
   });

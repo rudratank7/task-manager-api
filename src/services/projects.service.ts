@@ -6,10 +6,10 @@
  * The global error handler in server.ts catches AppErrors automatically.
  */
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
-import { db } from '../../db/index.js';
-import { projects, tasks } from '../../db/schema/index.js';
-import { AppError } from '../../lib/errors.js';
-import type { CreateProjectInput, UpdateProjectInput } from './projects.schema.js';
+import { db } from '../db/index.js';
+import { projects, tasks } from '../models/index.js';
+import { AppError } from '../utils/errors.js';
+import type { CreateProjectInput, UpdateProjectInput } from '../schemas/projects.schema.js';
 
 // ─── List Projects (paginated) ────────────────────────────────────────────────
 /**

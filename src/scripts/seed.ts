@@ -37,7 +37,7 @@ import {
   refreshTokens,
   tasks,
   users,
-} from '../db/schema/index.js';
+} from '../models/index.js';
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const CFG = {
